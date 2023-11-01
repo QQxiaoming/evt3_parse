@@ -1,0 +1,52 @@
+name: windows
+
+on:
+  push:
+    branches: [ main ]
+    paths-ignore:
+      - 'doc/**'
+      - 'docs/**'
+      - 'README.md'
+      - 'README_zh_CN.md'
+      - 'DEVELOPNOTE.md'
+      - 'CHANGELOG.md'
+      - '.readthedocs.yaml'
+  pull_request:
+    branches: [ main ]
+    paths-ignore:
+      - 'doc/**'
+      - 'docs/**'
+      - 'README.md'
+      - 'README_zh_CN.md'
+      - 'DEVELOPNOTE.md'
+      - 'CHANGELOG.md'
+      - '.readthedocs.yaml'
+  workflow_dispatch:
+
+jobs:
+  windows:
+    runs-on: windows-2022
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          arch: win64_mingw
+          version: '6.5.3'
+          modules: 'qt5compat qtmultimedia'
+          aqtversion: ==3.1.7
+
+      - name: Build all
+        run: |
+          qmake evt3_parse.pro -spec win32-g++
+          mingw32-make -j8
+          windeployqt --dir .\output ./build_release/out/evt3_parse.exe
+
+      - name: Upload build asserts
+        uses: actions/upload-artifact@v3.1.3
+        with:
+          name: evt3_parse_windows
+          path: |
+            ./output

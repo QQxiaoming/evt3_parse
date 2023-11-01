@@ -1,0 +1,60 @@
+name: linux
+
+on:
+  push:
+    branches: [ main ]
+    paths-ignore:
+      - 'doc/**'
+      - 'docs/**'
+      - 'README.md'
+      - 'README_zh_CN.md'
+      - 'DEVELOPNOTE.md'
+      - 'CHANGELOG.md'
+      - '.readthedocs.yaml'
+  pull_request:
+    branches: [ main ]
+    paths-ignore:
+      - 'doc/**'
+      - 'docs/**'
+      - 'README.md'
+      - 'README_zh_CN.md'
+      - 'DEVELOPNOTE.md'
+      - 'CHANGELOG.md'
+      - '.readthedocs.yaml'
+  workflow_dispatch:
+
+jobs:
+  ubuntu-2004:
+    runs-on: ubuntu-20.04
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.5.3'
+          modules: 'qt5compat qtmultimedia'
+          aqtversion: ==3.1.7
+
+      - name: Install prerequisites
+        run: |
+          sudo apt update
+          sudo apt install -y make gcc patchelf chrpath qt5-default libxcb-cursor0
+      
+      - name: Build all
+        run: |
+          export QMAKE=$Qt6_DIR/bin/qmake
+          qmake ./evt3_parse.pro -spec linux-g++ CONFIG+=qtquickcompiler
+          make clean
+          make -j8 
+          mkdir output
+          ./tools/linuxdeploy-x86_64.AppImage --executable=./build_release/out/evt3_parse --appdir=./output --plugin=qt
+          tar -czvf evt3_parse.tar.gz ./output
+
+      - name: Upload build asserts
+        uses: actions/upload-artifact@v3.1.3
+        with:
+          name: evt3_parse_Ubuntu2004
+          path: |
+            ./evt3_parse.tar.gz
