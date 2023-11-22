@@ -29,9 +29,8 @@ UI_DIR      = $$build_type/ui
 
 win32:{
     VERSION = $${BUILD_VERSION}.000
-    RC_ICONS = "icons\ico.ico"
-    QMAKE_TARGET_PRODUCT = "quardCRT"
-    QMAKE_TARGET_DESCRIPTION = "quardCRT based on Qt $$[QT_VERSION]"
+    QMAKE_TARGET_PRODUCT = "evt3_parse"
+    QMAKE_TARGET_DESCRIPTION = "evt3_parse based on Qt $$[QT_VERSION]"
     QMAKE_TARGET_COPYRIGHT = "GNU General Public License v3.0"
 }
 

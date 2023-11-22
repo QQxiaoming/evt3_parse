@@ -12,6 +12,7 @@
 #include <QMenu>
 #include <QMenuBar>
 #include <QAction>
+#include <QInputDialog>
 #include <QFile>
 #include <QMainWindow>
 #include <QApplication>
@@ -22,8 +23,9 @@
 
 #define IMG_WIDTH  (1280)
 #define IMG_HEIGHT (720)
-#define IMG_FPS    (60)
+#define IMG_FPS    (1)
 #define SEVER_PORT (13456)
+#define CLIENT_PORT (15678)
 
 class EventSensorRenderWidget : public QWidget
 {
@@ -65,6 +67,7 @@ public:
     bool getDrawTrigger(void) {return m_drawTrigger;}
     void setRec(bool value) { m_rec = value;}
     bool getRec(void) {return m_rec;}
+    void setDiff(uint32_t diff, uint32_t diff_on, uint32_t diff_off);
 
 private:
     enum EventType
@@ -107,11 +110,12 @@ private:
     QTcpServer *m_tcpServer;
     QTcpSocket *m_tcpSocket;
 #endif
+    QUdpSocket *m_udpSocketSetDiff;
+    QHostAddress m_host;
     int m_port;
     uint32_t lastUdpPackIndex = UINT_LEAST32_MAX;
 
     // render structure
-    QTimer *m_timer;
     uchar *m_buff0;
     uchar *m_buff1;
     uchar *m_wbuff;
@@ -127,27 +131,31 @@ private:
     QList<int32_t> m_trigEventL;
     QPen m_pen;
     QFont m_font;
-    bool m_drawFrame;
-    bool m_drawFps;
-    bool m_drawTrigger;
 
     // save
     bool m_rec = false;
     QFile *m_saveFile = nullptr;
+
+    bool m_drawFrame;
+    bool m_drawFps;
+    bool m_drawTrigger;
 };
 
 #include "main.moc"
 
 EventSensorRenderWidget::EventSensorRenderWidget(int port, bool drawFrame, 
         bool drawFps, bool drawTrigger, QWidget *parent)
-    : m_drawFrame(drawFrame), m_drawFps(drawFps), 
-      m_drawTrigger(drawTrigger), QWidget(parent)
+    :  QWidget(parent), m_drawFrame(drawFrame), m_drawFps(drawFps),
+      m_drawTrigger(drawTrigger)
 {
     m_pen.setColor(Qt::white);
     m_pen.setWidth(1);
     m_font = QApplication::font();
     m_font.setPointSize(20);
 
+    m_host = QHostAddress::LocalHost;
+    m_udpSocketSetDiff = new QUdpSocket(this);
+    
 #if USE_UDP
     m_udpSocket = new QUdpSocket(this);
     m_udpSocket->bind(QHostAddress::Any,port);
@@ -196,6 +204,13 @@ EventSensorRenderWidget::~EventSensorRenderWidget()
     m_tcpServer->close();
     delete m_tcpServer;
 #endif
+    delete m_udpSocketSetDiff;
+}
+
+void EventSensorRenderWidget::setDiff(uint32_t diff, uint32_t diff_on, uint32_t diff_off)
+{
+    uint32_t data[3] = {diff,diff_on,diff_off};
+    m_udpSocketSetDiff->writeDatagram((char *)data,sizeof(data),m_host,m_port-SEVER_PORT+CLIENT_PORT);
 }
 
 void EventSensorRenderWidget::paintEvent(QPaintEvent *event)
@@ -269,7 +284,7 @@ void EventSensorRenderWidget::processPendingDatagrams()
     while (m_udpSocket->hasPendingDatagrams()) {
         QByteArray datagram;
         datagram.resize(m_udpSocket->pendingDatagramSize());
-        m_udpSocket->readDatagram(datagram.data(), datagram.size());
+        m_udpSocket->readDatagram(datagram.data(), datagram.size(), &m_host);
 
         uint16_t *p = (uint16_t *)datagram.data();
         uint32_t udpPackIndex = *(uint32_t *)p;
@@ -345,10 +360,18 @@ void EventSensorRenderWidget::drawPixel(int x, int y, int pol)
         }
     }
 
+#if 1
     m_wbuff[y*IMG_WIDTH*3 + x*3 + 0] = 0;
     m_wbuff[y*IMG_WIDTH*3 + x*3 + 1] = 0;
     m_wbuff[y*IMG_WIDTH*3 + x*3 + 2] = 0;
     m_wbuff[y*IMG_WIDTH*3 + x*3 + pol] = 255;
+#else
+    if(pol) {
+        m_wbuff[y*IMG_WIDTH*3 + x*3 + 0] += 10;
+    } else {
+        m_wbuff[y*IMG_WIDTH*3 + x*3 + 0] -= 10;
+    }
+#endif
 }
 
 void EventSensorRenderWidget::process_event(uint16_t evt_data)
@@ -645,6 +668,33 @@ int main(int argc, char *argv[])
     QObject::connect(actionDT, &QAction::triggered, [&](){
         widet_l.setDrawTrigger(actionDT->isChecked());
         widet_r.setDrawTrigger(actionDT->isChecked());
+    });
+    QAction * actionDiff = menuOpt->addAction("setDiff");
+    QObject::connect(actionDiff, &QAction::triggered, [&](){
+        bool ok;
+        uint32_t diff = QInputDialog::getInt(&window, "setDiff", "diff", 0, 0, 100000, 1, &ok);
+        if(ok) {
+            widet_l.setDiff(diff,0xffffffff,0xffffffff);
+            widet_r.setDiff(diff,0xffffffff,0xffffffff);
+        }
+    });
+    QAction * actionDiffOn = menuOpt->addAction("setDiffOn");
+    QObject::connect(actionDiffOn, &QAction::triggered, [&](){
+        bool ok;
+        uint32_t diff = QInputDialog::getInt(&window, "setDiffOn", "diff", 0, 0, 100000, 1, &ok);
+        if(ok) {
+            widet_l.setDiff(0xffffffff,diff,0xffffffff);
+            widet_r.setDiff(0xffffffff,diff,0xffffffff);
+        }
+    });
+    QAction * actionDiffOff = menuOpt->addAction("setDiffOff");
+    QObject::connect(actionDiffOff, &QAction::triggered, [&](){
+        bool ok;
+        uint32_t diff = QInputDialog::getInt(&window, "setDiffOff", "diff", 0, 0, 100000, 1, &ok);
+        if(ok) {
+            widet_l.setDiff(0xffffffff,0xffffffff,diff);
+            widet_r.setDiff(0xffffffff,0xffffffff,diff);
+        }
     });
     window.show();
 #endif
