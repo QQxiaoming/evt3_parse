@@ -158,6 +158,7 @@ EventSensorRenderWidget::EventSensorRenderWidget(int port, bool drawFrame,
     
 #if USE_UDP
     m_udpSocket = new QUdpSocket(this);
+    m_udpSocket->setSocketOption(QAbstractSocket::ReceiveBufferSizeSocketOption,32*1024*1024);
     m_udpSocket->bind(QHostAddress::Any,port);
     connect(m_udpSocket, &QUdpSocket::readyRead,
             this, &EventSensorRenderWidget::processPendingDatagrams);
@@ -672,28 +673,28 @@ int main(int argc, char *argv[])
     QAction * actionDiff = menuOpt->addAction("setDiff");
     QObject::connect(actionDiff, &QAction::triggered, [&](){
         bool ok;
-        uint32_t diff = QInputDialog::getInt(&window, "setDiff", "diff", 0, 0, 0x7fffffff, 1, &ok);
+        uint32_t diff = QInputDialog::getInt(&window, "setDiff", "diff", 0, 0, 255, 1, &ok);
         if(ok) {
-            widet_l.setDiff(diff,0xffffffff,0xffffffff);
-            widet_r.setDiff(diff,0xffffffff,0xffffffff);
+            widet_l.setDiff(diff|0x01A16300,0xffffffff,0xffffffff);
+            widet_r.setDiff(diff|0x01A16300,0xffffffff,0xffffffff);
         }
     });
     QAction * actionDiffOn = menuOpt->addAction("setDiffOn");
     QObject::connect(actionDiffOn, &QAction::triggered, [&](){
         bool ok;
-        uint32_t diff = QInputDialog::getInt(&window, "setDiffOn", "diff", 0, 0, 0x7fffffff, 1, &ok);
+        uint32_t diff = QInputDialog::getInt(&window, "setDiffOn", "diff", 0, 0, 255, 1, &ok);
         if(ok) {
-            widet_l.setDiff(0xffffffff,diff,0xffffffff);
-            widet_r.setDiff(0xffffffff,diff,0xffffffff);
+            widet_l.setDiff(0xffffffff,diff|0x01A15000,0xffffffff);
+            widet_r.setDiff(0xffffffff,diff|0x01A15000,0xffffffff);
         }
     });
     QAction * actionDiffOff = menuOpt->addAction("setDiffOff");
     QObject::connect(actionDiffOff, &QAction::triggered, [&](){
         bool ok;
-        uint32_t diff = QInputDialog::getInt(&window, "setDiffOff", "diff", 0, 0, 0x7fffffff, 1, &ok);
+        uint32_t diff = QInputDialog::getInt(&window, "setDiffOff", "diff", 0, 0, 255, 1, &ok);
         if(ok) {
-            widet_l.setDiff(0xffffffff,0xffffffff,diff);
-            widet_r.setDiff(0xffffffff,0xffffffff,diff);
+            widet_l.setDiff(0xffffffff,0xffffffff,diff|0x01A13700);
+            widet_r.setDiff(0xffffffff,0xffffffff,diff|0x01A13700);
         }
     });
     window.show();
