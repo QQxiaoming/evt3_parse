@@ -168,6 +168,7 @@ EventSensorRenderWidget::EventSensorRenderWidget(int port, bool drawFrame,
     m_tcpServer->listen(QHostAddress::Any,port);
     connect(m_tcpServer, &QTcpServer::newConnection, [&](){
         m_tcpSocket = m_tcpServer->nextPendingConnection();
+        m_host = m_tcpSocket->peerAddress();
         connect(m_tcpSocket, &QTcpSocket::readyRead,
                 this, &EventSensorRenderWidget::processPendingDatagrams);
         connect(m_tcpSocket, &QTcpSocket::disconnected, [&](){
