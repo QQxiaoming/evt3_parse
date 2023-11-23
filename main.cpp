@@ -672,29 +672,32 @@ int main(int argc, char *argv[])
     });
     QAction * actionDiff = menuOpt->addAction("setDiff");
     QObject::connect(actionDiff, &QAction::triggered, [&](){
+        static int val = 0;
         bool ok;
-        uint32_t diff = QInputDialog::getInt(&window, "setDiff", "diff", 0, 0, 255, 1, &ok);
+        val = QInputDialog::getInt(&window, "setDiff", "diff", val, 0, 255, 1, &ok);
         if(ok) {
-            widet_l.setDiff(diff|0x01A16300,0xffffffff,0xffffffff);
-            widet_r.setDiff(diff|0x01A16300,0xffffffff,0xffffffff);
+            widet_l.setDiff(val|0x01A16300,0xffffffff,0xffffffff);
+            widet_r.setDiff(val|0x01A16300,0xffffffff,0xffffffff);
         }
     });
     QAction * actionDiffOn = menuOpt->addAction("setDiffOn");
     QObject::connect(actionDiffOn, &QAction::triggered, [&](){
+        static int val = 0;
         bool ok;
-        uint32_t diff = QInputDialog::getInt(&window, "setDiffOn", "diff", 0, 0, 255, 1, &ok);
+        val = QInputDialog::getInt(&window, "setDiffOn", "diff", val, 0, 255, 1, &ok);
         if(ok) {
-            widet_l.setDiff(0xffffffff,diff|0x01A15000,0xffffffff);
-            widet_r.setDiff(0xffffffff,diff|0x01A15000,0xffffffff);
+            widet_l.setDiff(0xffffffff,val|0x01A15000,0xffffffff);
+            widet_r.setDiff(0xffffffff,val|0x01A15000,0xffffffff);
         }
     });
     QAction * actionDiffOff = menuOpt->addAction("setDiffOff");
     QObject::connect(actionDiffOff, &QAction::triggered, [&](){
+        static int val = 0;
         bool ok;
-        uint32_t diff = QInputDialog::getInt(&window, "setDiffOff", "diff", 0, 0, 255, 1, &ok);
+        val = QInputDialog::getInt(&window, "setDiffOff", "diff", val, 0, 255, 1, &ok);
         if(ok) {
-            widet_l.setDiff(0xffffffff,0xffffffff,diff|0x01A13700);
-            widet_r.setDiff(0xffffffff,0xffffffff,diff|0x01A13700);
+            widet_l.setDiff(0xffffffff,0xffffffff,val|0x01A13700);
+            widet_r.setDiff(0xffffffff,0xffffffff,val|0x01A13700);
         }
     });
     window.show();
