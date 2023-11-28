@@ -13,6 +13,7 @@
 #include <QMenuBar>
 #include <QAction>
 #include <QInputDialog>
+#include <QMessageBox>
 #include <QFile>
 #include <QMainWindow>
 #include <QApplication>
@@ -159,13 +160,24 @@ EventSensorRenderWidget::EventSensorRenderWidget(int port, bool drawFrame,
 #if USE_UDP
     m_udpSocket = new QUdpSocket(this);
     m_udpSocket->setSocketOption(QAbstractSocket::ReceiveBufferSizeSocketOption,32*1024*1024);
-    m_udpSocket->bind(QHostAddress::Any,port);
+    bool ret = m_udpSocket->bind(QHostAddress::Any,port);
+    if(!ret) {
+        QMessageBox::critical(this, tr("Error"), tr("bind %1").arg(m_udpSocket->errorString()));
+        abort();
+    }
     connect(m_udpSocket, &QUdpSocket::readyRead,
             this, &EventSensorRenderWidget::processPendingDatagrams);
+    connect(m_udpSocket, &QUdpSocket::errorOccurred, [&](QAbstractSocket::SocketError socketError){
+        QMessageBox::critical(this, tr("Error"), tr("errorOccurred %1").arg(socketError));
+    });
 #endif
 #if USE_TCP
     m_tcpServer = new QTcpServer(this);
-    m_tcpServer->listen(QHostAddress::Any,port);
+    bool ret = m_tcpServer->listen(QHostAddress::Any,port);
+    if(!ret) {
+        QMessageBox::critical(this, tr("Error"), tr("listen %1").arg(m_tcpServer->errorString()));
+        abort();
+    }
     connect(m_tcpServer, &QTcpServer::newConnection, [&](){
         m_tcpSocket = m_tcpServer->nextPendingConnection();
         m_host = m_tcpSocket->peerAddress();
@@ -175,6 +187,9 @@ EventSensorRenderWidget::EventSensorRenderWidget(int port, bool drawFrame,
             m_tcpSocket->close();
             delete m_tcpSocket;
         });
+    });
+    connect(m_tcpServer, &QTcpServer::acceptError, [&](QAbstractSocket::SocketError socketError){
+        QMessageBox::critical(this, tr("Error"), tr("acceptError %1").arg(socketError));
     });
 #endif
 
