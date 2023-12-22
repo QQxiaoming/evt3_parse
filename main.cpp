@@ -487,7 +487,7 @@ void EventSensorRenderWidget::HandleVECT_BASE_X(uint16_t event)
 
 void EventSensorRenderWidget::HandleVECT_12(uint16_t event)
 {
-    uint16_t bits = event & 0x7ff;
+    uint16_t bits = event & 0xfff;
 
     for (int i = 0; i < 12; i++)
     {
@@ -516,7 +516,7 @@ void EventSensorRenderWidget::HandleVECT_12(uint16_t event)
 
 void EventSensorRenderWidget::HandleVECT_8(uint16_t event)
 {
-    uint16_t bits = event & 0x7ff;
+    uint16_t bits = event & 0xff;
 
     for (int i = 0; i < 8; i++)
     {
@@ -692,8 +692,8 @@ int main(int argc, char *argv[])
         bool ok;
         val = QInputDialog::getInt(&window, "setDiff", "diff", val, 0, 255, 1, &ok);
         if(ok) {
-            widet_l.setDiff(val|0x01A16300,0xffffffff,0xffffffff);
-            widet_r.setDiff(val|0x01A16300,0xffffffff,0xffffffff);
+            widet_l.setDiff(val|0x01A15000,0xffffffff,0xffffffff);
+            widet_r.setDiff(val|0x01A15000,0xffffffff,0xffffffff);
         }
     });
     QAction * actionDiffOn = menuOpt->addAction("setDiffOn");
@@ -702,8 +702,8 @@ int main(int argc, char *argv[])
         bool ok;
         val = QInputDialog::getInt(&window, "setDiffOn", "diff", val, 0, 255, 1, &ok);
         if(ok) {
-            widet_l.setDiff(0xffffffff,val|0x01A15000,0xffffffff);
-            widet_r.setDiff(0xffffffff,val|0x01A15000,0xffffffff);
+            widet_l.setDiff(0xffffffff,val|0x01A16300,0xffffffff);
+            widet_r.setDiff(0xffffffff,val|0x01A16300,0xffffffff);
         }
     });
     QAction * actionDiffOff = menuOpt->addAction("setDiffOff");
