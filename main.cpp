@@ -68,7 +68,7 @@ public:
     bool getDrawTrigger(void) {return m_drawTrigger;}
     void setRec(bool value) { m_rec = value;}
     bool getRec(void) {return m_rec;}
-    void setDiff(uint32_t diff, uint32_t diff_on, uint32_t diff_off);
+    void setDiff(uint32_t diff, uint32_t diff_on, uint32_t diff_off, uint32_t bias_fo, uint32_t bias_hpf, uint32_t bias_refr);
 
 private:
     enum EventType
@@ -224,9 +224,9 @@ EventSensorRenderWidget::~EventSensorRenderWidget()
     delete m_udpSocketSetDiff;
 }
 
-void EventSensorRenderWidget::setDiff(uint32_t diff, uint32_t diff_on, uint32_t diff_off)
+void EventSensorRenderWidget::setDiff(uint32_t diff, uint32_t diff_on, uint32_t diff_off, uint32_t bias_fo, uint32_t bias_hpf, uint32_t bias_refr)
 {
-    uint32_t data[3] = {diff,diff_on,diff_off};
+    uint32_t data[6] = {diff,diff_on,diff_off,bias_fo,bias_hpf,bias_refr};
     m_udpSocketSetDiff->writeDatagram((char *)data,sizeof(data),m_host,m_port-SEVER_PORT+CLIENT_PORT);
 }
 
@@ -690,32 +690,63 @@ int main(int argc, char *argv[])
     QObject::connect(actionDiff, &QAction::triggered, [&](){
         static int val = 0;
         bool ok;
-        val = QInputDialog::getInt(&window, "setDiff", "diff", val, 0, 255, 1, &ok);
+        val = QInputDialog::getInt(&window, "setDiff", "setDiff", val, 0, 255, 1, &ok);
         if(ok) {
-            widet_l.setDiff(val|0x01A15000,0xffffffff,0xffffffff);
-            widet_r.setDiff(val|0x01A15000,0xffffffff,0xffffffff);
+            widet_l.setDiff(val|0x01A15000,0xffffffff,0xffffffff,0xffffffff,0xffffffff,0xffffffff);
+            widet_r.setDiff(val|0x01A15000,0xffffffff,0xffffffff,0xffffffff,0xffffffff,0xffffffff);
         }
     });
     QAction * actionDiffOn = menuOpt->addAction("setDiffOn");
     QObject::connect(actionDiffOn, &QAction::triggered, [&](){
         static int val = 0;
         bool ok;
-        val = QInputDialog::getInt(&window, "setDiffOn", "diff", val, 0, 255, 1, &ok);
+        val = QInputDialog::getInt(&window, "setDiffOn", "setDiffOn", val, 0, 255, 1, &ok);
         if(ok) {
-            widet_l.setDiff(0xffffffff,val|0x01A16300,0xffffffff);
-            widet_r.setDiff(0xffffffff,val|0x01A16300,0xffffffff);
+            widet_l.setDiff(0xffffffff,val|0x01A16300,0xffffffff,0xffffffff,0xffffffff,0xffffffff);
+            widet_r.setDiff(0xffffffff,val|0x01A16300,0xffffffff,0xffffffff,0xffffffff,0xffffffff);
         }
     });
     QAction * actionDiffOff = menuOpt->addAction("setDiffOff");
     QObject::connect(actionDiffOff, &QAction::triggered, [&](){
         static int val = 0;
         bool ok;
-        val = QInputDialog::getInt(&window, "setDiffOff", "diff", val, 0, 255, 1, &ok);
+        val = QInputDialog::getInt(&window, "setDiffOff", "setDiffOff", val, 0, 255, 1, &ok);
         if(ok) {
-            widet_l.setDiff(0xffffffff,0xffffffff,val|0x01A13700);
-            widet_r.setDiff(0xffffffff,0xffffffff,val|0x01A13700);
+            widet_l.setDiff(0xffffffff,0xffffffff,val|0x01A13700,0xffffffff,0xffffffff,0xffffffff);
+            widet_r.setDiff(0xffffffff,0xffffffff,val|0x01A13700,0xffffffff,0xffffffff,0xffffffff);
         }
     });
+    QAction * actionBiasFo = menuOpt->addAction("setBiasFo");
+    QObject::connect(actionBiasFo, &QAction::triggered, [&](){
+        static int val = 0;
+        bool ok;
+        val = QInputDialog::getInt(&window, "setBiasFo", "setBiasFo", val, 0, 255, 1, &ok);
+        if(ok) {
+            widet_l.setDiff(0xffffffff,0xffffffff,0xffffffff,val|0x03A1E800,0xffffffff,0xffffffff);
+            widet_r.setDiff(0xffffffff,0xffffffff,0xffffffff,val|0x03A1E800,0xffffffff,0xffffffff);
+        }
+    });
+    QAction * actionBiasHpf = menuOpt->addAction("setBiasHpf");
+    QObject::connect(actionBiasHpf, &QAction::triggered, [&](){
+        static int val = 0;
+        bool ok;
+        val = QInputDialog::getInt(&window, "setBiasHpf", "setBiasHpf", val, 0, 255, 1, &ok);
+        if(ok) {
+            widet_l.setDiff(0xffffffff,0xffffffff,0xffffffff,0xffffffff,val|0x03A1FF00,0xffffffff);
+            widet_r.setDiff(0xffffffff,0xffffffff,0xffffffff,0xffffffff,val|0x03A1FF00,0xffffffff);
+        }
+    });
+    QAction * actionBiasRefr = menuOpt->addAction("setBiasRefr");
+    QObject::connect(actionBiasRefr, &QAction::triggered, [&](){
+        static int val = 0;
+        bool ok;
+        val = QInputDialog::getInt(&window, "setBiasRefr", "setBiasRefr", val, 0, 255, 1, &ok);
+        if(ok) {
+            widet_l.setDiff(0xffffffff,0xffffffff,0xffffffff,0xffffffff,0xffffffff,val|0x03829600);
+            widet_r.setDiff(0xffffffff,0xffffffff,0xffffffff,0xffffffff,0xffffffff,val|0x03829600);
+        }
+    });
+
     window.show();
 #endif
 
