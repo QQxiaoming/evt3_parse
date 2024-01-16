@@ -12,6 +12,9 @@ DEFINES += QT_DEPRECATED_WARNINGS
 QMAKE_CXXFLAGS += -Wno-deprecated-copy
 
 SOURCES += \
+    eventsensordatainput.cpp \
+    eventsensorrender.cpp \
+    eventsensorwidget.cpp \
     main.cpp
 
 build_type =
@@ -45,4 +48,9 @@ macx:{
     ICON = "icons\ico.icns"
     LIBS += -lutil
 }
+
+HEADERS += \
+    eventsensordatainput.h \
+    eventsensorrender.h \
+    eventsensorwidget.h
 
