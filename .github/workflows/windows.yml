@@ -42,7 +42,8 @@ jobs:
         run: |
           qmake evt3_parse.pro -spec win32-g++
           mingw32-make -j8
-          cp ./build_release/out/evt3_parse.exe ./output/evt3_parse_tcp.exe
+          windeployqt --dir .\output ./build_release/out/evt3_parse.exe
+          cp ./build_release/out/evt3_parse.exe ./output/evt3_parse.exe
           Compress-Archive -Path .\output\* -DestinationPath evt3_parse.zip
 
       - name: Upload build asserts
