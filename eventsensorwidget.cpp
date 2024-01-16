@@ -5,14 +5,14 @@
 EventSensorWidget::EventSensorWidget(int port,int trig_time, int lut_time, QWidget *parent)
     : QWidget{parent} {
     render = new EventSensorRender(this);
-    dataIn = new EventSensorDataInput(port,this);
+    dataIn = new EventSensorDataInput(port);
     timer = new QTimer(this);
     connect(timer, &QTimer::timeout, this, [&](){
         this->repaint();
     });
     timer->start(33*lut_time/trig_time);
 
-    connect(dataIn,&EventSensorDataInput::push_data, this, [&](QByteArray data){
+    connect(dataIn,&EventSensorDataInput::push_data, this, [&](QByteArray *data){
         render->pushData(data);
     });
     connect(dataIn,&EventSensorDataInput::error, this, [&](const QString &s){
@@ -41,6 +41,7 @@ void EventSensorWidget::paintEvent(QPaintEvent *event) {
         painter.fillRect(QRect(0, 0, this->width(), this->height()), Qt::black);
         painter.end();
     }
+    render->print_state();
     Q_UNUSED(event);
 }
 

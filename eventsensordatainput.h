@@ -21,7 +21,7 @@ protected:
     void run();
 
 signals:
-    void push_data(QByteArray data);
+    void push_data(QByteArray *data);
     void error(const QString &s);
 
 private slots:

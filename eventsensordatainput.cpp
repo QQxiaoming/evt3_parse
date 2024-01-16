@@ -7,9 +7,9 @@
 EventSensorDataInput::EventSensorDataInput(int port, QObject *parent)
     : QThread(parent)
     , m_exit(false) {
+    moveToThread(this);
     m_port = port;
     m_host = QHostAddress::LocalHost;
-    m_udpSocketSetDiff = new QUdpSocket(this);
 }
 
 EventSensorDataInput::~EventSensorDataInput() {
@@ -19,6 +19,7 @@ EventSensorDataInput::~EventSensorDataInput() {
 }
 
 void EventSensorDataInput::run() {
+    m_udpSocketSetDiff = new QUdpSocket(this);
     m_tcpServer = new QTcpServer;
     bool ret = m_tcpServer->listen(QHostAddress::Any,m_port);
     if(!ret) {
@@ -59,11 +60,13 @@ void EventSensorDataInput::run() {
 void EventSensorDataInput::processPendingDatagrams()
 {
     while (m_tcpSocket->bytesAvailable() > 100*1024) {
-        QByteArray datagram;
         uint64_t size = m_tcpSocket->bytesAvailable();
-        datagram.resize(size-size%2);
-        m_tcpSocket->read(datagram.data(), datagram.size());
-        emit push_data(datagram);
+        if(size > 1*1024*1024)
+            size = 1*1024*1024;
+        QByteArray* datagram = new QByteArray;
+        datagram->resize(size-size%2);
+        qint64 ret = m_tcpSocket->read(datagram->data(),datagram->size());
+        datagram->resize(ret);
         if(m_rec) {
             if(m_saveFile == nullptr) {
                 m_saveFile = new QFile(QString("evt3_%1_").arg(m_port)+QDateTime::currentDateTime().toString("yyyyMMdd_hhmmss")+".bin");
@@ -72,7 +75,7 @@ void EventSensorDataInput::processPendingDatagrams()
                     abort();
                 }
             }
-            m_saveFile->write(datagram);
+            m_saveFile->write(*datagram);
         } else {
             if(m_saveFile != nullptr) {
                 m_saveFile->close();
@@ -80,6 +83,7 @@ void EventSensorDataInput::processPendingDatagrams()
                 m_saveFile = nullptr;
             }
         }
+        emit push_data(datagram);
     }
 }
 

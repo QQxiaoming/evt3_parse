@@ -20,16 +20,25 @@ EventSensorRender::~EventSensorRender() {
     delete[] buff;
 }
 
-void EventSensorRender::process(void) {
+QByteArray *EventSensorRender::get_data(void) {
     QMutexLocker locker(&inMutex);
-    if(in.size() > 0) {
-        QByteArray datagram = in.first();
-        in.pop_front();
-        uint16_t *p = (uint16_t *)datagram.data();
-        for(int i = 0; i < datagram.size()/2; i++)
+    if (!in.isEmpty()) {
+        QByteArray *datagram = in.dequeue();
+        return datagram;
+    }
+    return nullptr;
+}
+
+void EventSensorRender::process(void) {
+
+    QByteArray *datagram = get_data();
+    if(datagram) {
+        uint16_t *p = (uint16_t *)datagram->data();
+        for(int i = 0; i < datagram->size()/2; i++)
         {
             process_event(p[i]);
         }
+        delete datagram;
     }
 }
 void EventSensorRender::run() {
@@ -38,22 +47,15 @@ void EventSensorRender::run() {
     }
 }
 
-void EventSensorRender::pushData(const char *data, uint64_t size) {
+void EventSensorRender::pushData(QByteArray *data) {
     QMutexLocker locker(&inMutex);
-    QByteArray ba(data,size);
-    in.push_back(ba);
-}
-
-void EventSensorRender::pushData(QByteArray data) {
-    QMutexLocker locker(&inMutex);
-    in.push_back(data);
+    in.enqueue(data);
 }
 
 QImage EventSensorRender::getImg(void) {
     QMutexLocker locker(&imgMutex);
-    if(img.size() > 0) {
-        QImage rimg = img.first();
-        img.pop_front();
+    if (!img.isEmpty()) {
+        QImage rimg = img.dequeue();
         return rimg;
     }
     return QImage();
@@ -71,11 +73,7 @@ void EventSensorRender::drawPixel(int x, int y, int pol)
             {
             #endif
                 QMutexLocker locker(&imgMutex);
-                img.push_back(qImg->copy());
-                delete[] buff;
-                delete qImg;
-                buff = new uchar[IMG_WIDTH * IMG_HEIGHT * 3];
-                qImg = new QImage(buff, IMG_WIDTH, IMG_HEIGHT, QImage::Format_RGB888);
+                img.enqueue(qImg->copy());
                 memset(buff, 0x0, IMG_WIDTH * IMG_HEIGHT * 3);
             }
             last_timestamp += 33333;
@@ -240,7 +238,7 @@ void EventSensorRender::HandleTIME_HIGH(uint16_t event)
     if(old_time_high_12b == time_high_12b) {
         timestamp = (timestamp & 0xffffffffff000fff) | (time_high_12b << 12);
     } else if(old_time_high_12b >= time_high_12b) {
-        qDebug() << "up 1" << old_time_high_12b << time_high_12b;
+        //qDebug() << "up 1" << old_time_high_12b << time_high_12b;
         timestamp = (time_high_12b << 12) + (timestamp & 0xffffffffff000000) + (1<<24);
     } else {
         timestamp = (time_high_12b << 12) + (timestamp & 0xffffffffff000000);

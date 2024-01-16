@@ -3,9 +3,10 @@
 
 #include <QThread>
 #include <QImage>
-#include <QVector>
 #include <QByteArray>
+#include <QQueue>
 #include <QMutex>
+#include <QDebug>
 
 class EventSensorRender : public QThread
 {
@@ -14,8 +15,14 @@ public:
     explicit EventSensorRender(QObject *parent = nullptr);
     ~EventSensorRender();
     QImage getImg(void);
-    void pushData(const char *data, uint64_t size);
-    void pushData(QByteArray data);
+    void pushData(QByteArray *data);
+
+    void print_state(void) {
+        if(data_num)
+            qDebug() << "d"<<data_num;
+        if(img_num)
+            qDebug() << "i"<<img_num;
+    }
 
 protected:
     void run();
@@ -55,6 +62,7 @@ private:
     void HandleOTHERS(uint16_t event);
     void HandleCONTINUED_12(uint16_t event);
     void HandleCONTINUED_4(uint16_t event);
+    QByteArray *get_data(void);
     void process(void);
 
 private:
@@ -62,8 +70,8 @@ private:
     uchar *buff;
     QMutex inMutex;
     QMutex imgMutex;
-    QVector<QByteArray> in;
-    QVector<QImage> img;
+    QQueue<QByteArray *> in;
+    QQueue<QImage> img;
     // parse structure
     uint64_t timestamp = 0; // 24bit width
     uint32_t addr_x_base;
@@ -76,6 +84,9 @@ private:
     QList<int32_t> m_trigEventH;
     QList<int32_t> m_trigEventL;
     bool m_exit;
+
+    uint64_t data_num = 0;
+    uint64_t img_num = 0;
 };
 
 #endif // EVENTSENSORRENDER_H
