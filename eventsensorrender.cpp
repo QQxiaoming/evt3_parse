@@ -1,17 +1,21 @@
 #include <QDebug>
+#include <QPainter>
 #include "eventsensorrender.h"
 
 #define IMG_WIDTH  (1280)
 #define IMG_HEIGHT (720)
 
 EventSensorRender::EventSensorRender(QObject *parent)
-    : QThread(parent) {
+    : QThread(parent) 
+    , m_exit(false) {
     buff = new uchar[IMG_WIDTH * IMG_HEIGHT * 3];
     qImg = new QImage(buff, IMG_WIDTH, IMG_HEIGHT, QImage::Format_RGB888);
     memset(buff, 0x0, IMG_WIDTH * IMG_HEIGHT * 3);
 }
 
 EventSensorRender::~EventSensorRender() {
+    m_exit = true;
+    wait();
     delete qImg;
     delete[] buff;
 }
@@ -29,9 +33,8 @@ void EventSensorRender::process(void) {
     }
 }
 void EventSensorRender::run() {
-    while(true) {
+    while(!m_exit) {
         process();
-        //msleep(1);
     }
 }
 
@@ -253,9 +256,13 @@ void EventSensorRender::HandleEXT_TRIGGER(uint16_t event)
     uint8_t value = event & 0x1;
     uint8_t id = (event>>8) & 0xf;
     if(value) {
-        //m_trigEventH.push_back(this->size().width());
-    } else {
-        //m_trigEventL.push_back(this->size().width());
+        // painer text on current qImg
+        QPainter painter;
+        painter.begin(qImg);
+        painter.setPen(QColor(255,255,255));
+        painter.setFont(QFont("Arial", 20));
+        painter.drawText(0, 40, QString("TRIGGER %1: %2 %3").arg(id).arg(value).arg(timestamp));
+        painter.end();
     }
     qDebug("TRIGGER %d: %d %lu",id,value,timestamp);
 }

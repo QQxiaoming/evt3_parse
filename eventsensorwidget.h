@@ -11,8 +11,13 @@ class EventSensorWidget : public QWidget
 {
     Q_OBJECT
 public:
-    explicit EventSensorWidget(QWidget *parent = nullptr);
+    explicit EventSensorWidget(int port,int trig_time, int lut_time, QWidget *parent = nullptr);
     ~EventSensorWidget();
+
+public:
+    void setRec(bool value);
+    bool getRec(void);
+    void setDiff(uint32_t diff, uint32_t diff_on, uint32_t diff_off, uint32_t bias_fo, uint32_t bias_hpf, uint32_t bias_refr);
 
 protected:
     void paintEvent(QPaintEvent *event);

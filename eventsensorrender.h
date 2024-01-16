@@ -75,6 +75,7 @@ private:
     uint32_t index_12;
     QList<int32_t> m_trigEventH;
     QList<int32_t> m_trigEventL;
+    bool m_exit;
 };
 
 #endif // EVENTSENSORRENDER_H

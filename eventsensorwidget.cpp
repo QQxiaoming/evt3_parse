@@ -1,18 +1,22 @@
 #include <QPainter>
+#include <QMessageBox>
 #include "eventsensorwidget.h"
 
-EventSensorWidget::EventSensorWidget(QWidget *parent)
+EventSensorWidget::EventSensorWidget(int port,int trig_time, int lut_time, QWidget *parent)
     : QWidget{parent} {
     render = new EventSensorRender(this);
-    dataIn = new EventSensorDataInput(13456+1,this);
+    dataIn = new EventSensorDataInput(port,this);
     timer = new QTimer(this);
     connect(timer, &QTimer::timeout, this, [&](){
         this->repaint();
     });
-    timer->start(33*1000/300);
+    timer->start(33*lut_time/trig_time);
 
     connect(dataIn,&EventSensorDataInput::push_data, this, [&](QByteArray data){
         render->pushData(data);
+    });
+    connect(dataIn,&EventSensorDataInput::error, this, [&](const QString &s){
+        QMessageBox::critical(this, tr("EventSensorWidget"), s);
     });
     render->start();
     dataIn->start();
@@ -38,4 +42,17 @@ void EventSensorWidget::paintEvent(QPaintEvent *event) {
         painter.end();
     }
     Q_UNUSED(event);
+}
+
+void EventSensorWidget::setRec(bool value) {
+    dataIn->setRec(value);
+}
+
+bool EventSensorWidget::getRec(void) {
+    return dataIn->getRec();
+}
+
+void EventSensorWidget::setDiff(uint32_t diff, uint32_t diff_on, uint32_t diff_off, uint32_t bias_fo, uint32_t bias_hpf, uint32_t bias_refr)
+{
+    dataIn->setDiff(diff,diff_on,diff_off,bias_fo,bias_hpf,bias_refr);
 }
