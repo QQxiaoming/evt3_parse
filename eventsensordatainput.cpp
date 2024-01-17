@@ -3,6 +3,7 @@
 #include <QDebug>
 #include <QEventLoop>
 #include "eventsensordatainput.h"
+#include "config.h"
 
 EventSensorDataInput::EventSensorDataInput(int port, QObject *parent)
     : QThread(parent)
@@ -89,8 +90,6 @@ void EventSensorDataInput::processPendingDatagrams()
 
 void EventSensorDataInput::setDiff(uint32_t diff, uint32_t diff_on, uint32_t diff_off, uint32_t bias_fo, uint32_t bias_hpf, uint32_t bias_refr)
 {
-    #define SEVER_PORT (13456)
-    #define CLIENT_PORT (15678)
     uint32_t data[6] = {diff,diff_on,diff_off,bias_fo,bias_hpf,bias_refr};
     m_udpSocketSetDiff->writeDatagram((char *)data,sizeof(data),m_host,m_port-SEVER_PORT+CLIENT_PORT);
 }

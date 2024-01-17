@@ -11,11 +11,15 @@ CONFIG += c++11
 DEFINES += QT_DEPRECATED_WARNINGS
 QMAKE_CXXFLAGS += -Wno-deprecated-copy
 
+include(./QGoodWindow/QGoodWindow/QGoodWindow.pri)
+include(./QGoodWindow/QGoodCentralWidget/QGoodCentralWidget.pri)
+
 SOURCES += \
     eventsensordatainput.cpp \
     eventsensorrender.cpp \
     eventsensorwidget.cpp \
-    main.cpp
+    main.cpp \
+    mainwindow.cpp
 
 build_type =
 CONFIG(debug, debug|release) {
@@ -52,5 +56,7 @@ macx:{
 HEADERS += \
     eventsensordatainput.h \
     eventsensorrender.h \
-    eventsensorwidget.h
+    eventsensorwidget.h \
+    config.h \
+    mainwindow.h
 

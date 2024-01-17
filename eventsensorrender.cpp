@@ -1,9 +1,7 @@
 #include <QDebug>
 #include <QPainter>
 #include "eventsensorrender.h"
-
-#define IMG_WIDTH  (1280)
-#define IMG_HEIGHT (720)
+#include "config.h"
 
 EventSensorRender::EventSensorRender(QObject *parent)
     : QThread(parent) 
