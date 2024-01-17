@@ -17,12 +17,10 @@ public:
     QImage getImg(void);
     void pushData(QByteArray *data);
 
-    void print_state(void) {
-        if(data_num)
-            qDebug() << "d"<<data_num;
-        if(img_num)
-            qDebug() << "i"<<img_num;
-    }
+    uint64_t getDataNum(void) { return data_num; }
+    uint64_t getImgNum(void) { return img_num; }
+    uint64_t getLostDataNum(void) { return lost_data_num; }
+    uint64_t getLostImgNum(void) { return lost_img_num; }
 
 protected:
     void run();
@@ -64,6 +62,7 @@ private:
     void HandleCONTINUED_4(uint16_t event);
     QByteArray *get_data(void);
     void process(void);
+    void init_param(void);
 
 private:
     QImage *qImg;
@@ -74,6 +73,7 @@ private:
     QQueue<QImage> img;
     // parse structure
     uint64_t timestamp = 0; // 24bit width
+    uint64_t last_timestamp = 0; // 24bit width
     uint32_t addr_x_base;
     uint32_t addr_y_base;
     uint8_t evt_pol;
@@ -87,6 +87,8 @@ private:
 
     uint64_t data_num = 0;
     uint64_t img_num = 0;
+    uint64_t lost_data_num = 0;
+    uint64_t lost_img_num = 0;
 };
 
 #endif // EVENTSENSORRENDER_H

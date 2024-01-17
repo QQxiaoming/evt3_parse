@@ -7,10 +7,18 @@ EventSensorWidget::EventSensorWidget(int port,int trig_time, int lut_time, QWidg
     render = new EventSensorRender(this);
     dataIn = new EventSensorDataInput(port);
     timer = new QTimer(this);
+    state_timer = new QTimer(this);
     connect(timer, &QTimer::timeout, this, [&](){
         this->repaint();
     });
     timer->start(33*lut_time/trig_time);
+    connect(state_timer, &QTimer::timeout, this, [&](){
+        data_num = render->getDataNum();
+        img_num = render->getImgNum();
+        lost_data_num = render->getLostDataNum();
+        lost_img_num = render->getLostImgNum();
+    });
+    state_timer->start(1000*5);
 
     connect(dataIn,&EventSensorDataInput::push_data, this, [&](QByteArray *data){
         render->pushData(data);
@@ -29,19 +37,21 @@ EventSensorWidget::~EventSensorWidget() {
 
 void EventSensorWidget::paintEvent(QPaintEvent *event) {
     QImage qImg = render->getImg();
+    QPainter painter;
+    painter.begin(this);
     if(!qImg.isNull()) {
-        QPainter painter;
-        painter.begin(this);
         painter.drawPixmap(QPoint(0, 0),
           QPixmap::fromImage(qImg.scaled(this->size() - QSize(0, 0))));
-        painter.end();
     } else {
-        QPainter painter;
-        painter.begin(this);
         painter.fillRect(QRect(0, 0, this->width(), this->height()), Qt::black);
-        painter.end();
     }
-    render->print_state();
+    painter.setPen(QColor(255,255,255));
+    painter.setFont(QFont("Arial", 10));
+    painter.drawText(QRect(0, 100, 200, 50), Qt::AlignLeft, QString("data_num: %1").arg(data_num));
+    painter.drawText(QRect(0, 120, 200, 50), Qt::AlignLeft, QString("img_num: %1").arg(img_num));
+    painter.drawText(QRect(0, 140, 200, 50), Qt::AlignLeft, QString("lost_data_num: %1").arg(lost_data_num));
+    painter.drawText(QRect(0, 160, 200, 50), Qt::AlignLeft, QString("lost_img_num: %1").arg(lost_img_num));
+    painter.end();
     Q_UNUSED(event);
 }
 

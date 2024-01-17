@@ -42,6 +42,7 @@ void EventSensorRender::process(void) {
     }
 }
 void EventSensorRender::run() {
+    init_param();
     while(!m_exit) {
         process();
     }
@@ -49,6 +50,11 @@ void EventSensorRender::run() {
 
 void EventSensorRender::pushData(QByteArray *data) {
     QMutexLocker locker(&inMutex);
+    data_num++;
+    if(in.size() > 100) {
+        lost_data_num++;
+        return;
+    }
     in.enqueue(data);
 }
 
@@ -63,17 +69,21 @@ QImage EventSensorRender::getImg(void) {
 
 void EventSensorRender::drawPixel(int x, int y, int pol)
 {
-    static uint64_t last_timestamp = 0;
     const static uchar test[IMG_WIDTH * IMG_HEIGHT * 3] = {0};
     while(1) {
-        if(timestamp - last_timestamp >= 33333) {
+        if((timestamp - last_timestamp >= 33333)&&(last_timestamp != 0)) {
             #if 1
             if(memcmp(buff,test,IMG_WIDTH * IMG_HEIGHT * 3) != 0) {
             #else
             {
             #endif
                 QMutexLocker locker(&imgMutex);
-                img.enqueue(qImg->copy());
+                img_num++;
+                if(img.size() > 500) {
+                    lost_img_num++;
+                } else {
+                    img.enqueue(qImg->copy());
+                }
                 memset(buff, 0x0, IMG_WIDTH * IMG_HEIGHT * 3);
             }
             last_timestamp += 33333;
@@ -87,9 +97,31 @@ void EventSensorRender::drawPixel(int x, int y, int pol)
     buff[y*IMG_WIDTH*3 + x*3 + pol] = 255;
 }
 
+void EventSensorRender::init_param()
+{
+    timestamp = 0;
+    addr_x_base = 0;
+    addr_y_base = 0;
+    evt_pol = 0;
+    find_start = false;
+
+    otherEvent[0] = 0;
+    otherEvent[1] = 0;
+    currOtherNum = 0;
+    index_12 = 0;
+}
+
 void EventSensorRender::process_event(uint16_t evt_data)
 {
     EventType event = static_cast<EventType>(evt_data >> 12);
+
+    if(!find_start) {
+        if(event == TIME_HIGH) {
+            find_start = true;
+        } else {
+            return;
+        }
+    }
 
     switch (event)
     {
@@ -243,7 +275,7 @@ void EventSensorRender::HandleTIME_HIGH(uint16_t event)
     } else {
         timestamp = (time_high_12b << 12) + (timestamp & 0xffffffffff000000);
     }
-
+    if(old_timestamp == 0) last_timestamp = timestamp;
     if(old_timestamp > timestamp) {
         qDebug("HIGH timestamp overflow %lu -> %lu : %lu %u %u\n",old_timestamp,timestamp,old_timestamp-timestamp,time_high_12b,old_time_high_12b);
     }

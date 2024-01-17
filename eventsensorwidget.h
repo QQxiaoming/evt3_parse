@@ -26,6 +26,12 @@ private:
     EventSensorRender *render;
     EventSensorDataInput *dataIn;
     QTimer *timer;
+    QTimer *state_timer;
+
+    uint64_t data_num = 0;
+    uint64_t img_num = 0;
+    uint64_t lost_data_num = 0;
+    uint64_t lost_img_num = 0;
 };
 
 #endif // EVENTSENSORWIDGET_H

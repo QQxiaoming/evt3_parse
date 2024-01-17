@@ -10,6 +10,7 @@
 #include "eventsensorwidget.h"
 
 //./test_event_camif_core -idx 1 -ip 169.254.34.189 -trig_time 100 -lut_time 1000 -tcp
+//./test_event_camif_core -idx 1 -ip 169.254.34.189 -tcp -allways_on
 
 #define IMG_WIDTH  (1280)
 #define IMG_HEIGHT (720)
