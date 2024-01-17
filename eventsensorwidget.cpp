@@ -3,15 +3,18 @@
 #include "eventsensorwidget.h"
 
 EventSensorWidget::EventSensorWidget(int port,int trig_time, int lut_time, QWidget *parent)
-    : QWidget{parent} {
+    : QWidget{parent}
+    , m_port(port)
+    , m_lut_time(lut_time)
+    , m_trig_time(trig_time) {
     render = new EventSensorRender(this);
-    dataIn = new EventSensorDataInput(port);
+    dataIn = new EventSensorDataInput(m_port);
     timer = new QTimer(this);
     state_timer = new QTimer(this);
     connect(timer, &QTimer::timeout, this, [&](){
         this->repaint();
     });
-    timer->start(33*lut_time/trig_time);
+    timer->start(33*m_lut_time/m_trig_time);
     connect(state_timer, &QTimer::timeout, this, [&](){
         data_num = render->getDataNum();
         img_num = render->getImgNum();
@@ -47,6 +50,7 @@ void EventSensorWidget::paintEvent(QPaintEvent *event) {
     }
     painter.setPen(QColor(255,255,255));
     painter.setFont(QFont("Arial", 10));
+    painter.drawText(QRect(0, 80, 200, 50), Qt::AlignLeft, QString("port: %1").arg(m_port==13456?"left":"right"));
     painter.drawText(QRect(0, 100, 200, 50), Qt::AlignLeft, QString("data_num: %1").arg(data_num));
     painter.drawText(QRect(0, 120, 200, 50), Qt::AlignLeft, QString("img_num: %1").arg(img_num));
     painter.drawText(QRect(0, 140, 200, 50), Qt::AlignLeft, QString("lost_data_num: %1").arg(lost_data_num));
@@ -66,4 +70,15 @@ bool EventSensorWidget::getRec(void) {
 void EventSensorWidget::setDiff(uint32_t diff, uint32_t diff_on, uint32_t diff_off, uint32_t bias_fo, uint32_t bias_hpf, uint32_t bias_refr)
 {
     dataIn->setDiff(diff,diff_on,diff_off,bias_fo,bias_hpf,bias_refr);
+}
+
+
+void EventSensorWidget::setTime(int32_t trig_time, int32_t lut_time)
+{
+    if(trig_time != -1)
+        m_trig_time = trig_time;
+    if(lut_time != -1)
+        m_lut_time = lut_time;
+    timer->stop();
+    timer->start(33*m_lut_time/m_trig_time);
 }

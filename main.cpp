@@ -28,22 +28,12 @@ int main(int argc, char *argv[])
     QMainWindow window;
     QWidget widget(&window);
     QVBoxLayout layout(&widget);
-    int trig_time = 100;
-    bool ok;
-    int val = QInputDialog::getInt(&window, "trig_time", "trig_time", trig_time, 0, 65536, 1, &ok);
-    if(ok) {
-        trig_time = val;
-    }
-    int lut_time = 1000;
-    val = QInputDialog::getInt(&window, "lut_time", "lut_time", lut_time, 0, 65536, 1, &ok);
-    if(ok) {
-        lut_time = val;
-    }
-    EventSensorWidget widet_l(SEVER_PORT+0,trig_time,lut_time,&widget);
-    EventSensorWidget widet_r(SEVER_PORT+1,trig_time,lut_time,&widget);
+
+    EventSensorWidget widet_l(SEVER_PORT+0,100,100,&widget);
+    EventSensorWidget widet_r(SEVER_PORT+1,100,100,&widget);
     layout.addWidget(&widet_l);
     layout.addWidget(&widet_r);
-    layout.setSpacing(0);
+    layout.setSpacing(1);
     layout.setContentsMargins(0, 0, 0, 0);
     widget.setLayout(&layout);
     widget.setContentsMargins(0, 0, 0, 0);
@@ -58,6 +48,29 @@ int main(int argc, char *argv[])
     QObject::connect(rec, &QAction::triggered, [&](){
         widet_l.setRec(rec->isChecked());
         widet_r.setRec(rec->isChecked());
+    });
+    QMenu * menuView = menuBar->addMenu("View");
+    QAction * actionViewL = menuView->addAction("Left");
+    actionViewL->setCheckable(true);
+    actionViewL->setChecked(true);
+    QAction * actionViewR = menuView->addAction("Right");
+    actionViewR->setCheckable(true);
+    actionViewR->setChecked(true);
+    QObject::connect(actionViewL, &QAction::triggered, [&](){
+        widet_l.setVisible(actionViewL->isChecked());
+        if(actionViewL->isChecked() && actionViewR->isChecked()) {
+            window.resize(IMG_WIDTH/2,IMG_HEIGHT);
+        } else {
+            window.resize(IMG_WIDTH/2,IMG_HEIGHT/2);
+        }
+    });
+    QObject::connect(actionViewR, &QAction::triggered, [&](){
+        widet_r.setVisible(actionViewR->isChecked());
+        if(actionViewL->isChecked() && actionViewR->isChecked()) {
+            window.resize(IMG_WIDTH/2,IMG_HEIGHT);
+        } else {
+            window.resize(IMG_WIDTH/2,IMG_HEIGHT/2);
+        }
     });
     QMenu * menuOpt = menuBar->addMenu("Option");
     QAction * actionDiff = menuOpt->addAction("setDiff");
@@ -120,7 +133,27 @@ int main(int argc, char *argv[])
             widet_r.setDiff(0xffffffff,0xffffffff,0xffffffff,0xffffffff,0xffffffff,val|0x03829600);
         }
     });
-
+    menuOpt->addSeparator();
+    QAction * actionTrigTime = menuOpt->addAction("setTrigTime");
+    QObject::connect(actionTrigTime, &QAction::triggered, [&](){
+        static int val = 100;
+        bool ok;
+        val = QInputDialog::getInt(&window, "setTrigTime", "setTrigTime", val, 0, 65536, 1, &ok);
+        if(ok) {
+            widet_l.setTime(val,-1);
+            widet_r.setTime(val,-1);
+        }
+    });
+    QAction * actionLutTime = menuOpt->addAction("setLutTime");
+    QObject::connect(actionLutTime, &QAction::triggered, [&](){
+        static int val = 100;
+        bool ok;
+        val = QInputDialog::getInt(&window, "setLutTime", "setLutTime", val, 0, 65536, 1, &ok);
+        if(ok) {
+            widet_l.setTime(-1,val);
+            widet_r.setTime(-1,val);
+        }
+    });
     window.show();
 
     return app.exec();
