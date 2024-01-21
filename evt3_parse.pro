@@ -49,7 +49,6 @@ unix:!macx:{
 
 macx:{
     QMAKE_RPATHDIR=$ORIGIN
-    ICON = "icons\ico.icns"
     LIBS += -lutil
 }
 

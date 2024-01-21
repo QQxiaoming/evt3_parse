@@ -28,7 +28,6 @@ QByteArray *EventSensorRender::get_data(void) {
 }
 
 void EventSensorRender::process(void) {
-
     QByteArray *datagram = get_data();
     if(datagram) {
         uint16_t *p = (uint16_t *)datagram->data();
@@ -256,7 +255,7 @@ void EventSensorRender::HandleTIME_LOW(uint16_t event)
     }
 
     if(old_timestamp > timestamp) {
-        qDebug("LOW timestamp overflow %lu -> %lu : %lu %u %u\n",old_timestamp,timestamp,old_timestamp-timestamp,time_low_12b,old_time_low_12b);
+        qDebug("LOW timestamp overflow %llu -> %llu : %llu %u %u\n",old_timestamp,timestamp,old_timestamp-timestamp,time_low_12b,old_time_low_12b);
     }
 }
 
@@ -275,7 +274,7 @@ void EventSensorRender::HandleTIME_HIGH(uint16_t event)
     }
     if(old_timestamp == 0) last_timestamp = timestamp;
     if(old_timestamp > timestamp) {
-        qDebug("HIGH timestamp overflow %lu -> %lu : %lu %u %u\n",old_timestamp,timestamp,old_timestamp-timestamp,time_high_12b,old_time_high_12b);
+        qDebug("HIGH timestamp overflow %llu -> %llu : %llu %u %u\n",old_timestamp,timestamp,old_timestamp-timestamp,time_high_12b,old_time_high_12b);
     }
 }
 
@@ -292,7 +291,7 @@ void EventSensorRender::HandleEXT_TRIGGER(uint16_t event)
         painter.drawText(0, 40, QString("TRIGGER %1: %2 %3").arg(id).arg(value).arg(timestamp));
         painter.end();
     }
-    qDebug("TRIGGER %d: %d %lu",id,value,timestamp);
+    qDebug("TRIGGER %d: %d %llu",id,value,timestamp);
 }
 
 void EventSensorRender::HandleOTHERS(uint16_t event)
