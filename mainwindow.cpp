@@ -1,6 +1,10 @@
 #include "mainwindow.h"
 #include "config.h"
 
+QString GIT_TAG =
+#include "git_tag.inc"
+;
+
 MainWindow::MainWindow(QWidget *parent)
     : QGoodWindow{parent} {
     m_good_central_widget = new QGoodCentralWidget(this);
@@ -135,6 +139,15 @@ MainWindow::MainWindow(QWidget *parent)
             widet_l->setTime(-1,val);
             widet_r->setTime(-1,val);
         }
+    });
+    QMenu * menuAbout = m_menu_bar->addMenu("About");
+    QAction * actionAbout = menuAbout->addAction("About");
+    QObject::connect(actionAbout, &QAction::triggered, [=](){
+        QMessageBox::about(this, "About", QString("evt3_parse\n\nVersion: %0").arg(GIT_TAG));
+    });
+    QAction * actionAboutQt = menuAbout->addAction("About Qt");
+    QObject::connect(actionAboutQt, &QAction::triggered, [=](){
+        QMessageBox::aboutQt(this, "About Qt");
     });
 
 #ifdef Q_OS_MAC
