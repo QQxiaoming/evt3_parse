@@ -47,7 +47,7 @@ jobs:
           export QMAKE=$Qt6_DIR/bin/qmake
           git fetch --tags --force
           git describe --always --long --dirty --abbrev=10 --tags | awk '{print "\""$0"\""}' > git_tag.inc
-          sed -i 's/git_tag.inc/git_tag.ci.inc/g' quardCRT.pro
+          sed -i 's/git_tag.inc/git_tag.ci.inc/g' evt3_parse.pro
           qmake ./evt3_parse.pro -spec linux-g++ CONFIG+=qtquickcompiler
           make clean
           make -j8 
