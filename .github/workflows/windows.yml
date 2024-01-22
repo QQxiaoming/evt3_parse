@@ -47,7 +47,7 @@ jobs:
           Compress-Archive -Path .\output\* -DestinationPath evt3_parse.zip
 
       - name: Upload build asserts
-        uses: actions/upload-artifact@v4.2.0
+        uses: actions/upload-artifact@v4
         with:
           name: evt3_parse_windows
           path: |
